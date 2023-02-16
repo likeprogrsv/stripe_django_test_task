@@ -12,17 +12,40 @@ from urllib3 import HTTPResponse
 from .models import Discount, Item, Order, Tax
 
 
-stripe.api_key = os.environ.get('STRIPE_KEY_PUBL')
+stripe.api_key = os.environ.get('STRIPE_KEY_SEC')
 
 
-def checkout(request):
-    return render(request, 'base/checkout.html')
+def payment_page(request, order_id):
+    order = Order.objects.get(pk=order_id)
+    return render(request, 'base/payment-page.html')
+
+
+def calculate_order_amount(curr_order):
+    order = curr_order
+    return int(order.total_price * 100)
+
+
+def create_payment_intent(request, order_id):
+    order = Order.objects.get(pk=order_id)
+
+    if request.method == 'POST':
+
+        # Создать платежное намерение в Stripe
+        intent = stripe.PaymentIntent.create(
+            amount=calculate_order_amount(order),
+            currency='usd'
+        )
+
+        # Отправить ответ с ID платежного намерения
+        return JsonResponse({'clientSecret': intent.client_secret})
+    context = {'STRIPE_PUBLISHABLE_KEY': os.environ.get('STRIPE_KEY_PUBL')}
+    # Отобразить форму оплаты
+    return render(request, 'base/create_payment_intent.html', context)
 
 
 def index(request):
     items = Item.objects.all()
     order_items = []
-    print(request.session)
 
     order_id = request.session.get('order_id')
     if order_id:
