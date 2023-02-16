@@ -36,7 +36,7 @@ def index(request):
     else:
         order = None        
     try:
-        discount = Discount.objects.get(pk=1)
+        discount = Discount.objects.all()
     except Discount.DoesNotExist:
         discount = None
 
@@ -58,22 +58,40 @@ def index(request):
 
 def add_to_order(request, item_id):
     create_order(request, item_id)
-    orders = Order.objects.filter(pk=request.session['order_id'])
-    items = Item.objects.filter(order__in=orders).distinct()
-    order_list = [serializers.serialize('json', x) for x in [orders, items]]
-    print(order_list)
-    return JsonResponse(order_list, safe=False)
+    # orders = Order.objects.filter(pk=request.session['order_id'])
+    # items = Item.objects.filter(order__in=orders).distinct()
+    # order_list = [serializers.serialize('json', x) for x in [orders, items]]
+    return redirect('home')
+
+
+def remove_from_order(request, item_id):
+    item = Item.objects.get(pk=item_id)
+    order = Order.objects.get(pk=request.session['order_id'])
+    order.items.remove(item)
+    order.save_total_price()
+    return redirect('home')
 
 
 def create_order(request, item_id):
     item = get_object_or_404(Item, pk=item_id)
+    tax = Tax.objects.get(pk=1)
     order, created = Order.objects.get_or_create(status='draft')
     order.save()
+    order.tax = tax
     order.items.add(item)
     order.save()
     order.save_total_price()
     request.session['order_id'] = order.id
     return order, item
+
+
+def apply_discount(request, discount_id):
+    order = Order.objects.get(pk=request.session['order_id'])
+    discount = Discount.objects.get(pk=discount_id)
+    order.discount = discount
+    order.save()
+    order.save_total_price()
+    return redirect('home')
 
 # @require_POST
 # def add_to_order(request, item_id):

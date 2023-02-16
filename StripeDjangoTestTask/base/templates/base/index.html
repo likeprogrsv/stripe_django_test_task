@@ -11,7 +11,11 @@
         <h5 class="card-title">{{ item.name }}</h5>
         <p class="card-text">{{ item.description }}</p>
         <p class="card-text">{{ item.price }} USD</p>
-        <button class="btn btn-success" data-item-id="{{ item.id }}">Add to Order</button>
+        <form method="POST" action="{% url 'add-to-order' item.id %}">
+          {% csrf_token %}
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <input class="btn btn-success" type="submit" value="Add to Order">
+        </form>
       </div>
     </div>
     {% endfor %}
@@ -27,22 +31,25 @@
           <small class="text-muted">{{ item.description }}</small>
         </div>
         <span class="text-muted">{{ item.price }} USD</span>
+        <form action="{% url 'remove-from-order' item.id %}" method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="item_id" value="{{ item.id }}">
+          <input class="btn btn-success" type="submit" value="Remove">
+        </form>
       </li>
       {% endfor %}
       {% if order.discount %}
       <li class="list-group-item d-flex justify-content-between bg-light">
         <div class="text-success">
           <h6 class="my-0">{{ order.discount.name }} discount</h6>
-          <small>{{ order.discount.value }}% off</small>
-        </div>
-        <span class="text-success">-{{ order.total_price }} USD</span>
+          </div>
+        <span class="text-success">-{{order.discount.value}}%</span>
       </li>
       {% endif %}
       {% if order.tax %}
       <li class="list-group-item d-flex justify-content-between">
-        <span>Tax ({{ order.tax.value }}%)</span>
-		
-        <strong>{{ order.total_price }} USD</strong>
+        <span>Tax </span>
+        <span class="text-muted">{{ order.tax.value }}%</span>
       </li>
       {% endif %}
       <li class="list-group-item d-flex justify-content-between">
@@ -53,64 +60,27 @@
     {% else %}
     <p>No items in order.</p>
     {% endif %}
+
+    <div>
+      <div class="bg-light p-3">
+        <h4>Select discount:</h4>
+          {% for discnt in discount %}
+          <div class="d-flex justify-content-between align-items-center my-2">
+            <strong>{{ discnt.name }} ({{ discnt.value }}% off)</strong>
+            <form action="{% url 'apply-discount' discnt.id %}" method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="discount_id" value="{{ discnt.id }}">
+              <input class="btn btn-warning mt-2" type="submit" value="Apply Discount">
+            </form>
+          </div>
+          {% endfor %}
+      </div>
+    </div>
   </div>
+
+
 </div>
 {% endblock content %}
 
 {% block extra_scripts %}
-{% csrf_token %} 
-
-<script defer>
-	window.addEventListener('load', function() {
-    document.querySelectorAll('[data-item-id]').forEach(function(button) {
-      button.addEventListener('click', function() {
-        var itemId = button.getAttribute('data-item-id');
-        let headers = new Headers();
-      // add header from cookie
-        const csrftoken = '{{ csrf_token }}';
-        headers.append('X-CSRFToken', csrftoken);
-        fetch('add-to-order/' + itemId + '/', {
-          method: 'POST',
-          headers: headers, 
-          credentials: 'same-origin'}, ).then(function(response) {
-          if (response.ok) {
-            return response.json().then(function(order) {
-                updateOrder(order);
-            });
-          } else {
-            console.error('Failed to add item to order.');
-          }
-        });
-      });
-    });
-  });
-    function updateOrder(order) {
-      order = JSON.stringify(order);
-      order = JSON.parse(order);
-      console.log(JSON.parse(order[0])[0].fields.total_price);
-      var orderList = document.querySelector('#order-list');
-      var orderTotal = document.querySelector('#order-total');
-      console.log(orderTotal.textContent);
-      console.log(orderList);
-      orderList.innerHTML = '';
-      JSON.parse(order[0])[0].fields.items.forEach(function(item) {
-        var li = `<li class="list-group-item d-flex justify-content-between lh-sm">
-          <div>
-            <h6 class="my-0">${JSON.parse(order[1])[0].fields.name}</h6>
-            <small class="text-muted">${JSON.parse(order[1])[0].fields.description}</small>
-          </div>
-          <span class="text-muted">${JSON.parse(order[1])[0].fields.price} USD</span>
-        </li>`;
-        orderList.insertAdjacentHTML('beforeend', li);
-      });
-      orderTotal.textContent = JSON.parse(order[0])[0].fields.total_price;
-      console.log(orderTotal.textContent);
-    }
-
-</script>
-
-
-<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 {% endblock extra_scripts %}

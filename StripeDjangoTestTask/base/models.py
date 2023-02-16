@@ -6,15 +6,24 @@ class Item(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=9, decimal_places=2)
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class Discount(models.Model):
     name = models.CharField(max_length=200)
     value = models.DecimalField(max_digits=3, decimal_places=1)
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class Tax(models.Model):
     name = models.CharField(max_length=200)
     value = models.DecimalField(max_digits=3, decimal_places=1)
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class Order(models.Model):
@@ -39,10 +48,13 @@ class Order(models.Model):
         total = sum(item.price for item in self.items.all())
 
         if self.discount:
-            total -= total * self.discount / 100
+            total -= total * self.discount.value / 100
 
         if self.tax:
             total += total * self.tax.value / 100
 
         self.total_price = total
         super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f'{self.id} - {self.status}'
