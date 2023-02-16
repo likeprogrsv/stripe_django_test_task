@@ -1,0 +1,116 @@
+{% extends 'base/template.html' %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+  <div class="col-lg-8">
+    <h2>Items</h2>
+    {% for item in items %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">{{ item.name }}</h5>
+        <p class="card-text">{{ item.description }}</p>
+        <p class="card-text">{{ item.price }} USD</p>
+        <button class="btn btn-success" data-item-id="{{ item.id }}">Add to Order</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  <div id="order" class="col-lg-4" >
+    <h2>Order</h2>
+    {% if order %}
+    <ul id="order-list" class="list-group mb-3">
+      {% for item in order.items.all %}
+      <li class="list-group-item d-flex justify-content-between lh-sm">
+        <div>
+          <h6 class="my-0">{{ item.name }}</h6>
+          <small class="text-muted">{{ item.description }}</small>
+        </div>
+        <span class="text-muted">{{ item.price }} USD</span>
+      </li>
+      {% endfor %}
+      {% if order.discount %}
+      <li class="list-group-item d-flex justify-content-between bg-light">
+        <div class="text-success">
+          <h6 class="my-0">{{ order.discount.name }} discount</h6>
+          <small>{{ order.discount.value }}% off</small>
+        </div>
+        <span class="text-success">-{{ order.total_price }} USD</span>
+      </li>
+      {% endif %}
+      {% if order.tax %}
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Tax ({{ order.tax.value }}%)</span>
+		
+        <strong>{{ order.total_price }} USD</strong>
+      </li>
+      {% endif %}
+      <li class="list-group-item d-flex justify-content-between">
+        <span>Total (USD)</span>
+        <strong id="order-total" >{{ order.total_price }}</strong>
+      </li>
+    </ul>
+    {% else %}
+    <p>No items in order.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock content %}
+
+{% block extra_scripts %}
+{% csrf_token %} 
+
+<script defer>
+	window.addEventListener('load', function() {
+    document.querySelectorAll('[data-item-id]').forEach(function(button) {
+      button.addEventListener('click', function() {
+        var itemId = button.getAttribute('data-item-id');
+        let headers = new Headers();
+      // add header from cookie
+        const csrftoken = '{{ csrf_token }}';
+        headers.append('X-CSRFToken', csrftoken);
+        fetch('add-to-order/' + itemId + '/', {
+          method: 'POST',
+          headers: headers, 
+          credentials: 'same-origin'}, ).then(function(response) {
+          if (response.ok) {
+            return response.json().then(function(order) {
+                updateOrder(order);
+            });
+          } else {
+            console.error('Failed to add item to order.');
+          }
+        });
+      });
+    });
+  });
+    function updateOrder(order) {
+      order = JSON.stringify(order);
+      order = JSON.parse(order);
+      console.log(JSON.parse(order[0])[0].fields.total_price);
+      var orderList = document.querySelector('#order-list');
+      var orderTotal = document.querySelector('#order-total');
+      console.log(orderTotal.textContent);
+      console.log(orderList);
+      orderList.innerHTML = '';
+      JSON.parse(order[0])[0].fields.items.forEach(function(item) {
+        var li = `<li class="list-group-item d-flex justify-content-between lh-sm">
+          <div>
+            <h6 class="my-0">${JSON.parse(order[1])[0].fields.name}</h6>
+            <small class="text-muted">${JSON.parse(order[1])[0].fields.description}</small>
+          </div>
+          <span class="text-muted">${JSON.parse(order[1])[0].fields.price} USD</span>
+        </li>`;
+        orderList.insertAdjacentHTML('beforeend', li);
+      });
+      orderTotal.textContent = JSON.parse(order[0])[0].fields.total_price;
+      console.log(orderTotal.textContent);
+    }
+
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+{% endblock extra_scripts %}
