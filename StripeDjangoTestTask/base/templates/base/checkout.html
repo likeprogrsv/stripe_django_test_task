@@ -10,7 +10,7 @@
       integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'style.css' %}" />
     <script src="https://js.stripe.com/v3/"></script>
-    {% comment %} <script src="{% static 'client.js' %}" defer></script> {% endcomment %}
+    
     
   </head>
   <body>
@@ -18,7 +18,8 @@
     <form id="payment-form" style="background-color: #85d996;">
       <div id="total-price" style="padding: 2px 2px; ">
         <div class="container">
-          <div class="row">
+          <a style="color:white; font-size: 14px;" href="{% url 'home' %}"> Back to home page</a>
+          <div class="row">            
             <div class="col">
               <h3 >Total:</h3>
             </div>
@@ -35,9 +36,8 @@
         </button>
       <p id="card-error" role="alert"></p>
       <p class="result-message hidden">
-        Payment succeeded, see the result in your
-        <a href="" target="_blank">Stripe dashboard.</a> Refresh the page to pay again.
-      </p>
+        Payment succeeded. Thank you for your purchase!
+        <a href="" target="_blank"></a> 
     </form>
   </body>
 </html>
@@ -167,7 +167,4 @@ var loading = function(isLoading) {
   }
 };
 
-const appearance = {
-  theme: 'night',
-};
 </script>

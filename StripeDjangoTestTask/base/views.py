@@ -19,10 +19,11 @@ def calculate_order_amount(curr_order):
 
 
 def create_payment_intent(request):
+    order = Order.objects.get(pk=request.session['order_id'])
     if request.method == 'POST':
         try:
             intent = stripe.PaymentIntent.create(
-                amount=10000,
+                amount=calculate_order_amount(order),
                 currency='usd'
             )
             return JsonResponse({'clientSecret': intent.client_secret})
