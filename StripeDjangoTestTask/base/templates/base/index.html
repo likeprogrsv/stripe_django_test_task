@@ -34,7 +34,7 @@
           <form action="{% url 'remove-from-order' item.id %}" method="POST">
             {% csrf_token %}
             <input type="hidden" name="item_id" value="{{ item.id }}">
-            <input class="btn btn-success" type="submit" value="Remove">
+            <input class="btn btn-light" type="submit" value="Remove">
           </form>
         </li>
         {% endfor %}
@@ -57,10 +57,10 @@
           <strong id="order-total" >{{ order.total_price }}</strong>
         </li>
       </ul>
-      <form action="{% url 'create-payment-intent' order.id %}" method="POST">
+      <form action="{% url 'checkout' order.id %}" method="POST">
         {% csrf_token %}
         <input type="hidden" name="order_id" value="{{ order.id }}">
-        <input class="btn btn-primary" type="submit" value="Pay">
+        <input class="btn btn-primary btn-block" type="submit" value="Pay">
       </form>
     {% else %}
     <p>No items in order.</p>

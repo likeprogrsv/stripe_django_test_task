@@ -1,23 +1,16 @@
-import json
-import os
-from tkinter.messagebox import NO
 from django.shortcuts import redirect, render
 import stripe
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_POST
-from django.core import serializers
-from urllib3 import HTTPResponse
-
 from .models import Discount, Item, Order, Tax
 
 
-stripe.api_key = os.environ.get('STRIPE_KEY_SEC')
+stripe.api_key = 'sk_test_51MbM31ELmdKRCbSQgSCNfqF4f9ZgKuv0KHe1LX1TdLRGb5MWWqKiL9Eyo8kR10JXHjFQxPYUimDQvKvmitNTUwLl00EqwRlJ0B'
 
 
-def payment_page(request, order_id):
+def checkout(request, order_id):
     order = Order.objects.get(pk=order_id)
-    return render(request, 'base/payment-page.html')
+    return render(request, 'base/checkout.html', {'order': order})
 
 
 def calculate_order_amount(curr_order):
@@ -25,33 +18,28 @@ def calculate_order_amount(curr_order):
     return int(order.total_price * 100)
 
 
-def create_payment_intent(request, order_id):
-    order = Order.objects.get(pk=order_id)
-
+def create_payment_intent(request):
     if request.method == 'POST':
+        try:
+            intent = stripe.PaymentIntent.create(
+                amount=10000,
+                currency='usd'
+            )
+            return JsonResponse({'clientSecret': intent.client_secret})
 
-        # Создать платежное намерение в Stripe
-        intent = stripe.PaymentIntent.create(
-            amount=calculate_order_amount(order),
-            currency='usd'
-        )
+        except Exception as e:
+            return e
+    # context = {'STRIPE_PUBLISHABLE_KEY': os.environ.get('STRIPE_KEY_PUBL')}
 
-        # Отправить ответ с ID платежного намерения
-        return JsonResponse({'clientSecret': intent.client_secret})
-    context = {'STRIPE_PUBLISHABLE_KEY': os.environ.get('STRIPE_KEY_PUBL')}
-    # Отобразить форму оплаты
-    return render(request, 'base/create_payment_intent.html', context)
+    # return render(request, 'base/create_payment_intent.html', context)
 
 
 def index(request):
     items = Item.objects.all()
-    order_items = []
-
     order_id = request.session.get('order_id')
     if order_id:
         try:
             order = Order.objects.get(pk=order_id)
-            order_items = order.items.all()
         except Order.DoesNotExist:
             request.session['order_id'], order_id = None, None
             order = None
@@ -71,7 +59,6 @@ def index(request):
     context = {
         'items': items,
         'order': order,
-        'order_items': order_items,
         'discount': discount,
         'tax': tax,
     }
@@ -80,22 +67,6 @@ def index(request):
 
 
 def add_to_order(request, item_id):
-    create_order(request, item_id)
-    # orders = Order.objects.filter(pk=request.session['order_id'])
-    # items = Item.objects.filter(order__in=orders).distinct()
-    # order_list = [serializers.serialize('json', x) for x in [orders, items]]
-    return redirect('home')
-
-
-def remove_from_order(request, item_id):
-    item = Item.objects.get(pk=item_id)
-    order = Order.objects.get(pk=request.session['order_id'])
-    order.items.remove(item)
-    order.save_total_price()
-    return redirect('home')
-
-
-def create_order(request, item_id):
     item = get_object_or_404(Item, pk=item_id)
     tax = Tax.objects.get(pk=1)
     order, created = Order.objects.get_or_create(status='draft')
@@ -105,7 +76,15 @@ def create_order(request, item_id):
     order.save()
     order.save_total_price()
     request.session['order_id'] = order.id
-    return order, item
+    return redirect('home')
+
+
+def remove_from_order(request, item_id):
+    item = Item.objects.get(pk=item_id)
+    order = Order.objects.get(pk=request.session['order_id'])
+    order.items.remove(item)
+    order.save_total_price()
+    return redirect('home')
 
 
 def apply_discount(request, discount_id):
