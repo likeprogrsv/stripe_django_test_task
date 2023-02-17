@@ -3,10 +3,11 @@
 Payment integration using Stripe (testing mode) and Django.
 
 В проекте реализована имитация совершения платежей с ипользованием системы Stripe (Stripe Payment Intent):
-    - Запуск проекта в контейнерах Docker;
-    - Использовал переменные среды;
-    - В Django четыре модели для тестовой работы с платежами: Order, Items, Discount и Tax;
-    - Пользовательский шаблон страницы оплаты заказа методом Payment Intent.
+
+   - Запуск проекта в контейнерах Docker;
+   - Использовал переменные среды;
+   - В Django четыре модели для тестовой работы с платежами: Order, Items, Discount и Tax;
+   - Пользовательский шаблон страницы оплаты заказа методом Payment Intent.
 
 
 Рекомендации по установке и настройке проекта:
@@ -14,8 +15,10 @@ Payment integration using Stripe (testing mode) and Django.
 1) В файле ".env.sample" изменить данные для тестового публичного и секретного API ключа из личного кабинета сайта Stripe. Далее, переименовать файл в ".env"
 
 2) Для запуска приложения в контейнерах исполнить в терминале следующие команды:
-    docker-compose build
-    docker-compose run --rm app sh -c "python manage.py createsuperuser"        # ввести данные для создания суперпользователя
+    
+    - docker-compose build
+    
+    - docker-compose run --rm app sh -c "python manage.py createsuperuser"        # ввести данные для создания суперпользователя
 
 3) После этого можно открыть страницу панели администратора http://127.0.0.1:8000/admin и добавить несколько записей для поля Items (товары сайта), пару записей поля Discounts (скидки в виде дисконта) и можно добавить запись в поле Tax (комиссия).
 
