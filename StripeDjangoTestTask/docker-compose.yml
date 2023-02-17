@@ -15,6 +15,7 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - STRIPE_KEY=${STRIPE_KEY_SEC}
+      - STRIPE_PUBL=${STRIPE_KEY_PUBL}
       - DEBUG=0
       - DB_HOST=db
       - DB_NAME=${DB_NAME}

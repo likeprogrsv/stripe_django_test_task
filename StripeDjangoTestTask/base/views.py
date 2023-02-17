@@ -11,7 +11,8 @@ stripe.api_key = os.environ.get('STRIPE_KEY')
 
 def checkout(request, order_id):
     order = Order.objects.get(pk=order_id)
-    return render(request, 'base/checkout.html', {'order': order})
+    context = {'order': order, 'STRIPE_PUBL': os.environ.get('STRIPE_PUBL')}
+    return render(request, 'base/checkout.html', context)
 
 
 def calculate_order_amount(curr_order):

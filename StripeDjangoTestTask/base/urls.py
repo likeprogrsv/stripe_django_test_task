@@ -19,7 +19,6 @@ urlpatterns = [
     path('apply-discount/<int:discount_id>/', views.apply_discount,
          name='apply-discount'),
 
-
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
