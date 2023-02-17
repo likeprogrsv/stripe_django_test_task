@@ -3,9 +3,10 @@ import stripe
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from .models import Discount, Item, Order, Tax
+import os
 
 
-stripe.api_key = 'sk_test_51MbM31ELmdKRCbSQgSCNfqF4f9ZgKuv0KHe1LX1TdLRGb5MWWqKiL9Eyo8kR10JXHjFQxPYUimDQvKvmitNTUwLl00EqwRlJ0B'
+stripe.api_key = os.environ.get('STRIPE_KEY')
 
 
 def checkout(request, order_id):
@@ -30,9 +31,6 @@ def create_payment_intent(request):
 
         except Exception as e:
             return e
-    # context = {'STRIPE_PUBLISHABLE_KEY': os.environ.get('STRIPE_KEY_PUBL')}
-
-    # return render(request, 'base/create_payment_intent.html', context)
 
 
 def index(request):
@@ -46,7 +44,7 @@ def index(request):
             order = None
             pass
     else:
-        order = None        
+        order = None
     try:
         discount = Discount.objects.all()
     except Discount.DoesNotExist:
@@ -95,20 +93,3 @@ def apply_discount(request, discount_id):
     order.save()
     order.save_total_price()
     return redirect('home')
-
-# @require_POST
-# def add_to_order(request, item_id):
-#     item = get_object_or_404(Item, pk=item_id)
-#     order, _ = Order.objects.get_or_create(pk=request.session.get('order_id'))
-#     order.items.add(item)
-
-#     order.save()
-
-#     return JsonResponse({
-#         'total_price': str(order.total_price),
-#         'items': [{
-#             'name': item.name,
-#             'description': item.description,
-#             'price': str(item.price),
-#         } for item in order.items.all()],
-#     })
